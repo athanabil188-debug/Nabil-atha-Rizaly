@@ -1,5 +1,5 @@
 {
-  "name": "tugas_pmbaru",
+  "name": "simple-todo-list-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -44,5 +44,6 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0"
   },
-  "private": true
+  "private": true,
+  "description": "Aplikasi Todo List sederhana dengan React Native dan Expo yang menggunakan AsyncStorage untuk menyimpan data secara lokal."
 }

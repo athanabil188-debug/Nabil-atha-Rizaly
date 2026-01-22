@@ -39,3 +39,7 @@ Ini adalah aplikasi Todo List sederhana yang dibangun dengan React Native dan Ex
 ## Penyimpanan Data
 
 Aplikasi ini menggunakan AsyncStorage untuk menyimpan data todo secara lokal di perangkat. Data akan tetap tersimpan meskipun aplikasi ditutup dan dibuka kembali.
+
+## Cara Upload ke GitHub
+
+Untuk mengupload proyek ini ke GitHub, silakan ikuti petunjuk dalam file [GITHUB_UPLOAD_GUIDE.md](./GITHUB_UPLOAD_GUIDE.md).
