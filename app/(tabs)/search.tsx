@@ -3,22 +3,19 @@ import {
   FlatList,
   Platform,
   Pressable,
-  RefreshControl,
-  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
 import {
   Card,
   Text,
-  Chip,
-  FAB,
   Searchbar,
+  Chip,
   Divider,
+  SegmentedButtons,
 } from "react-native-paper";
 import { useRouter } from "expo-router";
 
-// Data mobil dengan gambar lokal
 const CARS_DATA = [
   {
     id: "1",
@@ -31,6 +28,7 @@ const CARS_DATA = [
     km: "15,000",
     transmission: "Manual",
     fuel: "Bensin",
+    type: "used",
   },
   {
     id: "2",
@@ -43,6 +41,7 @@ const CARS_DATA = [
     km: "35,000",
     transmission: "Otomatis",
     fuel: "Bensin",
+    type: "used",
   },
   {
     id: "3",
@@ -55,6 +54,7 @@ const CARS_DATA = [
     km: "120,000",
     transmission: "Manual",
     fuel: "Diesel",
+    type: "used",
   },
   {
     id: "4",
@@ -67,6 +67,7 @@ const CARS_DATA = [
     km: "8,000",
     transmission: "Otomatis",
     fuel: "Bensin",
+    type: "new",
   },
   {
     id: "5",
@@ -79,6 +80,7 @@ const CARS_DATA = [
     km: "150,000",
     transmission: "Otomatis",
     fuel: "Bensin",
+    type: "used",
   },
   {
     id: "6",
@@ -91,6 +93,7 @@ const CARS_DATA = [
     km: "45,000",
     transmission: "Otomatis",
     fuel: "Bensin",
+    type: "used",
   },
 ];
 
@@ -102,39 +105,38 @@ function formatRupiah(number: number): string {
   }).format(number);
 }
 
-export default function HomeScreen() {
+export default function SearchScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState("Semua");
-
-  const brands = ["Semua", "Toyota", "Honda", "Mitsubishi"];
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  };
+  const [carType, setCarType] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   const filteredCars = CARS_DATA.filter((car) => {
     const matchesSearch =
       car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      car.model.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesBrand = selectedBrand === "Semua" || car.brand === selectedBrand;
-    return matchesSearch && matchesBrand;
+      car.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      car.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = carType === "all" || car.type === carType;
+    return matchesSearch && matchesType;
+  }).sort((a, b) => {
+    if (sortBy === "price-low") return a.price - b.price;
+    if (sortBy === "price-high") return b.price - a.price;
+    if (sortBy === "year") return b.year - a.year;
+    return 0;
   });
 
   const renderCarCard = ({ item }: any) => (
     <Pressable onPress={() => router.push(`/car-detail?id=${item.id}`)}>
       <Card style={styles.carCard}>
-        <Card.Cover
-          source={item.image}
-          style={styles.carImage}
-        />
+        <Card.Cover source={item.image} style={styles.carImage} />
         <Card.Content style={styles.cardContent}>
           <View style={styles.carHeader}>
-            <View>
+            <View style={styles.titleSection}>
               <Text style={styles.carBrand}>{item.brand}</Text>
               <Text style={styles.carModel}>{item.model}</Text>
+              <Chip mode="outlined" style={styles.typeChip} textStyle={{ fontSize: 10 }}>
+                {item.type === "new" ? "Baru" : "Bekas"}
+              </Chip>
             </View>
             <Text style={styles.carPrice}>{formatRupiah(item.price)}</Text>
           </View>
@@ -152,6 +154,10 @@ export default function HomeScreen() {
               <Text style={styles.detailLabel}>Transmisi</Text>
               <Text style={styles.detailValue}>{item.transmission}</Text>
             </View>
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>BBM</Text>
+              <Text style={styles.detailValue}>{item.fuel}</Text>
+            </View>
           </View>
           <View style={styles.locationRow}>
             <Text style={styles.locationText}>📍 {item.location}</Text>
@@ -164,59 +170,74 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>carsdepok</Text>
-        <Text style={styles.headerSubtitle}>Temukan Mobil Impianmu</Text>
+        <Text style={styles.headerTitle}>Cari Mobil</Text>
+        <Text style={styles.headerSubtitle}>Temukan mobil terbaik untukmu</Text>
       </View>
 
       <Searchbar
-        placeholder="Cari mobil..."
+        placeholder="Cari berdasarkan merek, model, atau kota..."
         onChangeText={setSearchQuery}
         value={searchQuery}
         style={styles.searchBar}
       />
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.brandsContainer}
-        contentContainerStyle={styles.brandsContent}
-      >
-        {brands.map((brand) => (
+      <View style={styles.filtersContainer}>
+        <Text style={styles.filterLabel}>Tipe Mobil</Text>
+        <View style={styles.chipRow}>
           <Chip
-            key={brand}
-            selected={selectedBrand === brand}
-            onPress={() => setSelectedBrand(brand)}
-            style={[
-              styles.brandChip,
-              selectedBrand === brand && styles.brandChipSelected,
-            ]}
-            textStyle={selectedBrand === brand ? { color: "#fff" } : {}}
+            selected={carType === "all"}
+            onPress={() => setCarType("all")}
+            style={[styles.chip, carType === "all" && styles.chipSelected]}
+            textStyle={carType === "all" ? { color: "#fff" } : {}}
           >
-            {brand}
+            Semua
           </Chip>
-        ))}
-      </ScrollView>
+          <Chip
+            selected={carType === "new"}
+            onPress={() => setCarType("new")}
+            style={[styles.chip, carType === "new" && styles.chipSelected]}
+            textStyle={carType === "new" ? { color: "#fff" } : {}}
+          >
+            Baru
+          </Chip>
+          <Chip
+            selected={carType === "used"}
+            onPress={() => setCarType("used")}
+            style={[styles.chip, carType === "used" && styles.chipSelected]}
+            textStyle={carType === "used" ? { color: "#fff" } : {}}
+          >
+            Bekas
+          </Chip>
+        </View>
+
+        <Text style={styles.filterLabel}>Urutkan</Text>
+        <SegmentedButtons
+          value={sortBy}
+          onValueChange={setSortBy}
+          buttons={[
+            { label: "Terbaru", value: "newest" },
+            { label: "Termurah", value: "price-low" },
+            { label: "Termahal", value: "price-high" },
+          ]}
+          style={styles.sortButtons}
+        />
+      </View>
+
+      <View style={styles.resultsInfo}>
+        <Text style={styles.resultsText}>{filteredCars.length} mobil ditemukan</Text>
+      </View>
 
       <FlatList
         data={filteredCars}
         renderItem={renderCarCard}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>🔍</Text>
             <Text style={styles.emptyText}>Tidak ada mobil ditemukan</Text>
           </View>
         }
-      />
-
-      <FAB
-        icon="plus"
-        style={styles.fab}
-        onPress={() => router.push("/add")}
-        color="#fff"
       />
     </View>
   );
@@ -247,19 +268,37 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderRadius: 10,
   },
-  brandsContainer: {
-    maxHeight: 50,
+  filtersContainer: {
+    backgroundColor: "#fff",
+    padding: 15,
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 10,
   },
-  brandsContent: {
-    paddingHorizontal: 15,
-    gap: 8,
+  chipRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 15,
   },
-  brandChip: {
+  chip: {
     backgroundColor: "#E3F2FD",
   },
-  brandChipSelected: {
+  chipSelected: {
     backgroundColor: "#0D47A1",
+  },
+  sortButtons: {
+    marginBottom: 10,
+  },
+  resultsInfo: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  resultsText: {
+    fontSize: 13,
+    color: "#666",
   },
   listContent: {
     padding: 15,
@@ -272,7 +311,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   carImage: {
-    height: 200,
+    height: 180,
     backgroundColor: "#f0f0f0",
   },
   cardContent: {
@@ -284,17 +323,24 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 10,
   },
+  titleSection: {
+    flex: 1,
+  },
   carBrand: {
     fontSize: 14,
     color: "#FFFFFF",
   },
   carModel: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#FFFFFF",
   },
+  typeChip: {
+    alignSelf: "flex-start",
+    marginTop: 5,
+  },
   carPrice: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#FF6B35",
   },
@@ -310,12 +356,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#999",
     marginBottom: 3,
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#333",
   },
@@ -331,14 +377,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    fontSize: 16,
-    color: "#999",
-  },
-  fab: {
-    position: "absolute",
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#FF6B35",
+    fontSize: 40,
+    marginBottom: 10,
   },
 });
